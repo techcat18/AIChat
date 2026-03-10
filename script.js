@@ -1,33 +1,28 @@
-const sendButton = document.getElementById("sendButton");
-const messageInput = document.getElementById("messageInput");
-const messages = document.getElementById("messages");
+class ChatMessage extends HTMLElement {
+  connectedCallback() {
+    const sender = this.getAttribute("sender");
 
-function addMessage(text, sender) {
-  const message = document.createElement("div");
-  message.classList.add("message", sender);
-  message.textContent = text;
+    const wrapper = document.createElement("div");
 
-  messages.appendChild(message);
-  messages.scrollTop = messages.scrollHeight;
+    wrapper.className =
+      sender === "user"
+        ? "flex justify-end"
+        : "flex justify-start";
+
+    const bubble = document.createElement("div");
+
+    bubble.className =
+      sender === "user"
+        ? "bg-blue-500 text-white px-4 py-2 rounded-lg max-w-md"
+        : "bg-gray-300 text-black px-4 py-2 rounded-lg max-w-md";
+
+    bubble.innerHTML = this.innerHTML;
+
+    wrapper.appendChild(bubble);
+
+    this.innerHTML = "";
+    this.appendChild(wrapper);
+  }
 }
 
-function sendMessage() {
-  const text = messageInput.value.trim();
-  if (text === "") return;
-
-  // user message
-  addMessage(text, "user");
-
-  messageInput.value = "";
-
-  // fake AI response
-  setTimeout(() => {
-    addMessage("AI response placeholder", "ai");
-  }, 500);
-}
-
-sendButton.addEventListener("click", sendMessage);
-
-messageInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
+customElements.define("chat-message", ChatMessage);
