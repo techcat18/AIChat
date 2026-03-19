@@ -1,1 +1,1 @@
-# AIChat
+This project is a simple AI chat application built as part of a web development course. It uses React with Vite and Tailwind CSS, and allows users to send messages and receive real responses from an AI via the OpenRouter API. The app includes a sidebar for conversations and a chat interface, and focuses on practicing components, state management, and working with asynchronous API requests.
