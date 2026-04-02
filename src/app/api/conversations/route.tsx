@@ -3,6 +3,6 @@ const conversations = [
   { id: 2, title: "Ironman Plan" }
 ];
 
-export function getConversations() {
-  return Promise.resolve(conversations);
+export async function GET() {
+  return Response.json(conversations);
 }
