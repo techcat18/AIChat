@@ -1,57 +1,78 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { use } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import Sidebar from "@/components/Sidebar";
 import ChatPanel from "@/components/ChatPanel";
 
-import {
-  getConversations,
-  getMessages,
-  addMessage,
-  getAIResponse
-} from "@/lib/api";
-
-export default function ConversationPage({
+export default function Page({
   params
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = use(params); // ✅ unwrap promise here
+  const { id } = use(params);
   const activeId = Number(id);
 
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    getConversations().then(setConversations);
-  }, []);
+  const { data: conversations = [] } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const res = await fetch("/api/conversations");
+      return res.json();
+    }
+  });
 
-  useEffect(() => {
-    getMessages(activeId).then(setMessages);
-  }, [activeId]);
+  const { data: messages = [] } = useQuery({
+    queryKey: ["messages", activeId],
+    queryFn: async () => {
+      const res = await fetch(`/api/messages?id=${activeId}`);
+      return res.json();
+    }
+  });
+
+  const addMessageMutation = useMutation({
+    mutationFn: async (message: any) => {
+      await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: activeId, message })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages", activeId] });
+    }
+  });
 
   async function handleSend(text: string) {
     if (!text.trim()) return;
 
     const userMessage = { role: "user", content: text };
 
-    setMessages((prev) => [...prev, userMessage]);
-    await addMessage(activeId, userMessage);
+    queryClient.setQueryData(["messages", activeId], (old: any = []) => [
+      ...old,
+      userMessage
+    ]);
 
-    setLoading(true);
+    await addMessageMutation.mutateAsync(userMessage);
 
-    try {
-      const updated = [...messages, userMessage];
-      const aiText = await getAIResponse(updated);
+    const res = await fetch("/api/llm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [...messages, userMessage]
+      })
+    });
 
-      const aiMessage = { role: "assistant", content: aiText };
+    const data = await res.json();
 
-      setMessages((prev) => [...prev, aiMessage]);
-      await addMessage(activeId, aiMessage);
-    } finally {
-      setLoading(false);
-    }
+    const aiMessage = {
+      role: "assistant",
+      content: data.content
+    };
+
+    await addMessageMutation.mutateAsync(aiMessage);
   }
 
   return (
@@ -65,7 +86,7 @@ export default function ConversationPage({
       <ChatPanel
         messages={messages}
         onSend={handleSend}
-        loading={loading}
+        loading={addMessageMutation.isPending}
       />
     </div>
   );
