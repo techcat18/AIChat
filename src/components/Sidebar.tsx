@@ -1,24 +1,29 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function Sidebar({
   conversations,
   activeId,
-  onSelect
-}: {
-  conversations: any[];
-  activeId: number;
-  onSelect: (id: number) => void;
-}) {
+  onCreate
+}: any) {
+  const router = useRouter();
+
   return (
     <div className="w-64 border-r p-4">
-      <h2 className="font-bold mb-4">Chats</h2>
+      <button
+        className="mb-4 px-2 py-1 border"
+        onClick={onCreate}
+      >
+        + New chat
+      </button>
 
-      {conversations.map((c) => (
+      {conversations.map((c: any) => (
         <div
           key={c.id}
-          onClick={() => onSelect(c.id)}
-          className={`p-2 cursor-pointer rounded ${
-            activeId === c.id ? "bg-gray-200" : ""
+          onClick={() => router.push(`/conversation/${c.id}`)}
+          className={`p-2 cursor-pointer ${
+            c.id === activeId ? "bg-gray-200" : ""
           }`}
         >
           {c.title}

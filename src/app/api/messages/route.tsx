@@ -1,37 +1,38 @@
-const messagesDB: Record<number, any[]> = {
-  1: [
-    { role: "assistant", content: "Where do you want to hike?" },
-    { role: "user", content: "Somewhere in the mountains" },
-    {
-      role: "assistant",
-      content: "Nice! I’d recommend the Tatras — great views and trails."
-    }
-  ],
-  2: [
-    { role: "assistant", content: "What distance are you training for?" },
-    { role: "user", content: "Full Ironman" },
-    {
-      role: "assistant",
-      content: "Awesome. You should focus on endurance and brick workouts."
-    }
-  ]
-};
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = Number(searchParams.get("id"));
 
-  return Response.json(messagesDB[id] || []);
+  const messages = await prisma.message.findMany({
+    where: { conversationId: id },
+    orderBy: { id: "asc" }
+  });
+
+  return Response.json(messages);
 }
 
 export async function POST(req: Request) {
   const { conversationId, message } = await req.json();
 
-  if (!messagesDB[conversationId]) {
-    messagesDB[conversationId] = [];
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId }
+  });
+
+  if (!conversation) {
+    return Response.json(
+      { error: "Conversation does not exist" },
+      { status: 400 }
+    );
   }
 
-  messagesDB[conversationId].push(message);
+  const saved = await prisma.message.create({
+    data: {
+      role: message.role,
+      content: message.content,
+      conversationId
+    }
+  });
 
-  return Response.json(message);
+  return Response.json(saved);
 }
