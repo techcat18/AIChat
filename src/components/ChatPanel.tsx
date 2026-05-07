@@ -24,7 +24,6 @@ export default function ChatPanel({
 
   return (
     <div className="flex flex-col flex-1 h-full min-h-0">
-      {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto min-h-0">
         {messages.map((m, i) => (
           <div key={i} className="mb-2">
@@ -35,7 +34,6 @@ export default function ChatPanel({
         {loading && <p>AI is typing...</p>}
       </div>
 
-      {/* Input bar */}
       <form
         onSubmit={handleSubmit}
         className="border-t p-4 flex gap-2 w-full"

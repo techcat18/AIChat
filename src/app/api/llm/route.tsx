@@ -5,7 +5,6 @@ export async function POST(req: Request) {
 
   const lastMessage = messages[messages.length - 1];
 
-  // 1. Save user message
   await createMessage(
     conversationId,
     "user",
