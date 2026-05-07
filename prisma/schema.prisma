@@ -3,18 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Conversation {
-  id       Int       @id @default(autoincrement())
-  title    String
-  messages Message[]
+  id        Int       @id @default(autoincrement())
+  title     String
+  messages  Message[]
 }
 
 model Message {
-  id             Int    @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   role           String
   content        String
   conversationId Int
