@@ -1,13 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import {
+  getMessages,
+  getConversationById,
+  createMessage
+} from "@/lib/db/chat";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+
   const id = Number(searchParams.get("id"));
 
-  const messages = await prisma.message.findMany({
-    where: { conversationId: id },
-    orderBy: { id: "asc" }
-  });
+  const messages = await getMessages(id);
 
   return Response.json(messages);
 }
@@ -15,9 +17,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const { conversationId, message } = await req.json();
 
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: conversationId }
-  });
+  const conversation = await getConversationById(conversationId);
 
   if (!conversation) {
     return Response.json(
@@ -26,13 +26,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const saved = await prisma.message.create({
-    data: {
-      role: message.role,
-      content: message.content,
-      conversationId
-    }
-  });
+  const saved = await createMessage(
+    conversationId,
+    message.role,
+    message.content
+  );
 
   return Response.json(saved);
 }

@@ -1,9 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import {
+  getConversations,
+  createConversation
+} from "@/lib/db/chat";
 
 export async function GET() {
-  const conversations = await prisma.conversation.findMany({
-    orderBy: { id: "desc" }
-  });
+  const conversations = await getConversations();
 
   return Response.json(conversations);
 }
@@ -11,11 +12,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const { title } = await req.json();
 
-  const conversation = await prisma.conversation.create({
-    data: {
-      title: title || "New conversation"
-    }
-  });
+  const conversation = await createConversation(title);
 
   return Response.json(conversation);
 }
